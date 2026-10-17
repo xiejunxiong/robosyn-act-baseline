@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "record_type": "transcribed_historical_local_evaluation",
+  "official_competition_result": false,
+  "provenance": {
+    "source": "Project owner historical experiment notes supplied on 2026-10-17",
+    "independently_verified": false,
+    "original_metrics_in_repository": false,
+    "original_recorded_at": "2026-10-04 21:26:49",
+    "original_timezone": null,
+    "original_metrics_relative_to_upstream": "eval_result/click_bell/act/random/None/pretrained_model/2026-10-04_21-26-49/evaluation_metrics.json",
+    "note": "This is a transcription, not the original evaluation_metrics.json. Episode seeds are unknown except for the three failure video filenames."
+  },
+  "config": {
+    "task": "click_bell", "policy": "act", "setting": "random",
+    "checkpoint_step": 80000, "seed": 0, "episodes": 10, "max_action_steps": 361
+  },
+  "summary": {
+    "success_count": 7, "episode_count": 10, "success_rate": 0.7,
+    "average_action_steps": 141.60,
+    "average_inference_latency_ms_per_model_call": 41.241,
+    "average_total_inference_time_ms_per_episode": 127.848,
+    "total_model_calls": 31, "average_model_calls_per_episode": 3.10
+  },
+  "feasibility_filter": {"enabled": true, "accepted_seeds": 10, "candidate_seeds": 12},
+  "episodes": [
+    {"episode": 1, "success": true, "action_steps": 48, "model_calls": 1, "seed": null},
+    {"episode": 2, "success": false, "action_steps": 361, "model_calls": 8, "seed": 924231285, "video": "episode_001_seed_924231285_fail.mp4"},
+    {"episode": 3, "success": true, "action_steps": 48, "model_calls": 1, "seed": null},
+    {"episode": 4, "success": true, "action_steps": 47, "model_calls": 1, "seed": null},
+    {"episode": 5, "success": false, "action_steps": 361, "model_calls": 8, "seed": 192771779, "video": "episode_004_seed_192771779_fail.mp4"},
+    {"episode": 6, "success": true, "action_steps": 47, "model_calls": 1, "seed": null},
+    {"episode": 7, "success": true, "action_steps": 48, "model_calls": 1, "seed": null},
+    {"episode": 8, "success": false, "action_steps": 361, "model_calls": 8, "seed": 530702035, "video": "episode_007_seed_530702035_fail.mp4"},
+    {"episode": 9, "success": true, "action_steps": 48, "model_calls": 1, "seed": null},
+    {"episode": 10, "success": true, "action_steps": 47, "model_calls": 1, "seed": null}
+  ],
+  "limitations": [
+    "Only 10 expert-feasible episodes; not a high-confidence population success estimate.",
+    "No valid official evaluation application was submitted before the deadline, per owner record.",
+    "Raw metrics, videos, checkpoint hashes and training logs are pending upload and independent verification."
+  ]
+}

@@ -1,64 +1,54 @@
-# ACT 环境与上游版本
+# Environment: reference, historical run, unresolved gaps
 
-接口核对日期：2026-10-17。
+接口核查日期2026-10-17；历史环境来自项目所有者记录，未取得服务器完整pip freeze。工具安装与ACT/仿真安装分开，`scripts/setup_env.sh`仅安装轻量工具依赖，不安装或修改DexSim/ACT环境。
 
-| 组件 | 本项目依据 |
-| --- | --- |
-| RoboSynChallenge | `64b0775eddb3ed8c4c3d1212f322e8a9d036e9d6` |
-| LeRobot | 官方 ACT 配置中的 `b883328e6c95681ca90a18b102e4ae5e1f91e2bf` |
-| Python（训练/仿真） | 推荐 3.11，官方 ACT 约束 `>=3.10,<3.12` |
-| EmbodiChain | 官方安装文档的 `v0.2.4.post1`，另须满足 ACT uv.lock |
-| DexSim / Torch / torchvision | 由官方 ACT `uv.lock` 解析，勿单独升级 |
+| Component | 官方参考 | 历史运行记录 |
+| --- | --- | --- |
+| RoboSynChallenge | 本工具核查64b0775eddb3ed8c4c3d1212f322e8a9d036e9d6 | 历史commit未提供 |
+| Python | >=3.10,<3.12 | 3.11.15 |
+| Torch | uv.lock 2.7.1，pyproject要求<2.8 | 2.10.0+cu128 |
+| torchvision | 0.22.1 | Pending |
+| NumPy | 1.26.4 | Pending |
+| LeRobot | b883328e6c95681ca90a18b102e4ae5e1f91e2bf | 同commit，0.3.3 |
+| datasets | 3.6.0 | 3.6.0 |
+| EmbodiChain | v0.2.4.post1 | 89c14da8d |
+| DexSim | 0.4.3 | 0.4.3 |
 
-启动工具没有 Torch 依赖，在 Mac 上也可检查数据和命令；实际训练在 NVIDIA Linux 环境执行。
+历史服务器：NVIDIA RTX4090 24GB、Intel Xeon Gold6430、Ubuntu22.04、Linux5.15。CUDA12.8是Torch构建版本，驱动版本需另存。Torch2.10不在当前官方ACT约束内；这是历史成功运行记录，不应将它描述为官方支持矩阵。
 
-## 已有比赛镜像
+## Existing competition image — historical route
 
-1. 找到镜像内的 RoboSynChallenge、EmbodiChain 目录及 ACT Python。
-2. 用 `git -C /path/to/RoboSynChallenge rev-parse HEAD` 检查源码版本。若不匹配，保留旧目录和数据，另建固定版本副本。启动器会拒绝不匹配的版本，因为命令行和适配器可能变化。
-3. 指定解释器并检查依赖：
+保留已经训练成功的venv，显式设置`ACT_PYTHON=/path/to/existing/venv/bin/python`。检查`import lerobot.scripts.train`、Torch CUDA、datasets3.6.0以及任务包导入。不要盲目对现有环境执行pip升级、uv sync或源码reset。工具CLI运行在单独venv，`--python`选择训练/仿真解释器。
 
-```bash
-export ROBOSYN_ROOT=/root/workspace/RoboSynChallenge
-export ACT_PYTHON="$ROBOSYN_ROOT/policy/act/.venv/bin/python"
-"$ACT_PYTHON" -c "import sys, torch, lerobot, embodichain, dexsim; print(sys.version); print(torch.__version__); print('CUDA:', torch.cuda.is_available()); print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'NO GPU')"
-```
+历史遇到官方uv.lock的私有dexsim-engine包hash校验不一致；实际用已有venv直接执行官方训练入口。**哈希问题未解决；从零安装的完整复现尚未验证。** 不能篡改锁文件hash、忽略校验或宣称私有wheel公开可安装。
 
-平台“无卡模式”可用于准备文件，但不能运行 CUDA 训练或 GPU 仿真。带卡实例启动后检查 `nvidia-smi` 和上述 CUDA 输出。
+## Fresh workspace — reference only, not a verified installer
 
-## 新的 Linux GPU 工作区
-
-在新目录操作，不在已有实验目录 checkout/reset。需要 Git、Python 3.11、uv、适配的 NVIDIA 驱动及 Vulkan/仿真依赖。先阅读[官方安装说明](https://github.com/EDEM-AI/RoboSynChallenge/blob/64b0775eddb3ed8c4c3d1212f322e8a9d036e9d6/docs/getting_started/installation.md)完成系统和 EmbodiChain 依赖。
-
-官方 ACT 锁文件引用相邻的 EmbodiChain 目录：
-
-```text
-workspace/
-├── EmbodiChain/
-├── RoboSynChallenge/policy/act/.venv/
-└── robosyn-act-baseline/
-```
+在新目录取得源码，不覆盖历史实验目录：
 
 ```bash
-# 从空工作区开始
 git clone https://github.com/DexForce/EmbodiChain.git
-git -C EmbodiChain checkout v0.2.4.post1
+# 新clone内切换记录中的commit
+git -C EmbodiChain checkout 89c14da8d
 git clone https://github.com/EDEM-AI/RoboSynChallenge.git
 git -C RoboSynChallenge checkout 64b0775eddb3ed8c4c3d1212f322e8a9d036e9d6
-cd RoboSynChallenge/policy/act
-uv sync --frozen --python 3.11
 ```
 
-官方配置通过供应商 HTTP 包索引提供 DexSim；请在受信任网络中依照官方说明安装并核对锁文件，不要将无关环境全局配置为不验证 TLS。该流程依赖外部二进制包服务可用性，离线 CI 不验证安装过程。
+参考[官方安装文档](https://github.com/EDEM-AI/RoboSynChallenge/blob/64b0775eddb3ed8c4c3d1212f322e8a9d036e9d6/docs/getting_started/installation.md)配置NVIDIA/Vulkan、仿真资源和供应方授权的DexSim。官方ACT环境位于RoboSynChallenge/policy/act，uv配置引用相邻EmbodiChain。官方参考命令为该目录中的`uv sync --frozen --python 3.11`，但历史hash失败意味着这里不能承诺它能完成。
 
-安装后运行依赖检查及 README 的 smoke training。若锁文件安装失败，请保留错误信息，对照固定版本官方说明排查，避免随意升级 LeRobot。
+进一步冲突：核查EmbodiChain commit89c14da8d的pyproject声明`lerobot>=0.4.4`，而ACT通过uv override固定0.3.3的Git commit。直接把所有仓库逐个pip install可能升级LeRobot，导致旧入口缺失。不要依赖普通pip自动解析出历史环境。需供应方协助确认组合、核对完整环境快照，并在独立新环境验证。
 
-## 常见问题
+## Optional real ACT CPU smoke
 
-- `Cannot read JSON .../meta/info.json`：数据路径应指向数据集本身，而非外层 `data/`。
-- `ACT requires LeRobot v2.1`：先运行官方转换脚本，不要只修改版本号。
-- `Python executable not found`：用 `--python /absolute/path/to/act/env/bin/python` 指定已有环境。
-- `Output already exists`：换一个 run 目录，启动器不会删除已有文件。
-- `Missing model.safetensors`：选择 `pretrained_model/` 或 HF 模型根目录。
-- `CUDA out of memory`：减小 batch size，再考虑减小 chunk size 或官方多 GPU 训练。
-- 本入口不提供 `--resume`：恢复涉及已保存配置和优化器状态，请备份后按官方流程操作。
+`python -m robosyn_act smoke`无Torch要求。`--act`需要已经装有指定LeRobot Git commit的兼容Torch环境；验证pip的direct_url.json中的commit ID，不能只凭0.3.3版本字符串判断。此测试无需DexSim，不下载预训练ResNet权重，采用缩小的Transformer维度但真实ACTPolicy/CVAE与loss。editable本地LeRobot安装缺少VCS元数据时也会拒绝，需先明确安装来源，不能伪造元数据。
+
+若选用独立CPU测试环境，可以从固定源码VCS安装LeRobot（不在历史GPU环境升级）：
+
+```bash
+# 在单独、兼容的Python >=3.10 venv中；依赖安装仍受网络/平台可用性影响
+python -m pip install 'lerobot @ git+https://github.com/huggingface/lerobot.git@b883328e6c95681ca90a18b102e4ae5e1f91e2bf'
+python -m pip install -e /path/to/robosyn-act-baseline
+python -m robosyn_act smoke --act
+```
+
+Mac的CPU smoke不代表Linux仿真已验证。实际训练/仿真仍按Python3.11镜像及已有venv操作。当前执行结果详见[validation](validation.md)。

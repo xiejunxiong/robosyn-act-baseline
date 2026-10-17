@@ -1,0 +1,55 @@
+# Historical experiment record, not a launcher config or an environment lock.
+# Transcribed from project-owner notes supplied on 2026-10-17.
+provenance:
+  source: owner_provided_historical_experiment_record
+  independently_verified: false
+  raw_logs_available_in_repository: false
+  historical_robosyn_commit: null
+  dataset_revision: null
+task: click_bell
+algorithm: ACT
+team: JXNU SynDex
+dataset:
+  repo_id: RoboSynChallenge/cobotmagic_Sim_click_bell
+  codebase_version: v2.1
+  episodes: 1000
+  frames: 74000
+  fps: 25
+  tasks: 1
+  camera_resolution_wh: [640, 480]
+  cameras: [cam_high.color, cam_left_wrist.color, cam_right_wrist.color]
+  state_dim: 14
+  action_dim: 14
+training:
+  steps: 80000
+  batch_size: 24
+  num_workers: 4
+  chunk_size: 50
+  n_action_steps: 50
+  log_freq: 100
+  save_freq: 10000
+  seed: null  # Not explicitly in historical command; pinned wrapper defaults to 1000.
+environment:
+  gpu: NVIDIA RTX 4090 24GB
+  cpu: Intel Xeon Gold 6430
+  os: Ubuntu 22.04
+  kernel: Linux 5.15
+  python: 3.11.15
+  torch: 2.10.0+cu128
+  torch_cuda_build: '12.8'
+  torchvision: null
+  numpy: null
+  lerobot_version: 0.3.3
+  lerobot_commit: b883328e6c95681ca90a18b102e4ae5e1f91e2bf
+  datasets: 3.6.0
+  embodichain_tag: v0.2.4.post1
+  embodichain_commit: 89c14da8d
+  dexsim_engine: 0.4.3
+checkpoints: ['010000', '020000', '030000', '040000', '050000', '060000', '070000', '080000']
+checkpoint_path_relative_to_act: outputs/train/act_click_bell_bs24_80k/checkpoints/080000/pretrained_model
+public_checkpoint_url: null
+training_losses:
+  action_reconstruction: null
+  kl: null
+  total: null
+  status: Not recorded / Pending

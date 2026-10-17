@@ -10,6 +10,9 @@ import unittest
 from unittest.mock import patch
 
 from robosyn_act import cli
+from robosyn_act.config import DEFAULT_CONFIG, load_config
+
+import yaml
 
 
 class LauncherTests(unittest.TestCase):
@@ -80,6 +83,12 @@ class LauncherTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "cam_high"):
             cli.validate_dataset(self.dataset)
 
+    def test_mixed_camera_naming_rejected_before_upstream_drops_images(self):
+        self.info["features"]["observation.images.cam_high"] = self.info["features"].pop("cam_high.color")
+        self.save_info()
+        with self.assertRaisesRegex(ValueError, "Mixed legacy/canonical"):
+            cli.validate_dataset(self.dataset)
+
     def test_missing_metadata_and_video(self):
         (self.dataset / "meta/episodes_stats.jsonl").unlink()
         with self.assertRaisesRegex(ValueError, "episodes_stats"):
@@ -111,6 +120,27 @@ class LauncherTests(unittest.TestCase):
         self.assertNotIn("--wandb", cmd)
         self.assertNotIn("--overwrite", cmd)
         self.assertFalse(self.output.exists())
+
+    def test_yaml_then_profile_then_cli_precedence(self):
+        config = load_config()
+        config["training"]["batch_size"] = 12
+        self.info["fps"] = 25
+        self.save_info()
+        path = self.root / "run.yaml"
+        path.write_text(yaml.safe_dump(config))
+        cmd, _, _ = self.build(self.args("--config", str(path)))
+        self.assertEqual(cmd[cmd.index("--batch-size") + 1], "12")
+        cmd, _, _ = self.build(self.args("--config", str(path), "--profile", "smoke", "--steps", "2"))
+        self.assertEqual(cmd[cmd.index("--batch-size") + 1], "1")
+        self.assertEqual(cmd[cmd.index("--steps") + 1], "2")
+        self.assertEqual(cmd[cmd.index("--seed") + 1], "1000")
+
+    def test_explicit_dataset_contract(self):
+        with self.assertRaisesRegex(ValueError, "fps"):
+            cli.validate_dataset(self.dataset, load_config(DEFAULT_CONFIG)["dataset"])
+        self.info["fps"] = 25
+        self.save_info()
+        self.assertEqual(cli.validate_dataset(self.dataset, load_config()["dataset"])["state_dim"], 14)
 
     def test_existing_output_never_deleted(self):
         self.output.mkdir()
@@ -150,6 +180,24 @@ class LauncherTests(unittest.TestCase):
         with patch.object(cli.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "other\n")):
             with self.assertRaisesRegex(ValueError, "revision"):
                 cli.upstream_root(self.upstream)
+
+    def test_eval_historical_defaults_and_environment(self):
+        config = self.upstream / "configs/click_bell/random/gym_config.json"
+        config.parent.mkdir(parents=True)
+        config.write_text("{}")
+        chain = self.root / "EmbodiChain"
+        (chain / "embodichain_tasks").mkdir(parents=True)
+        args = cli.parser().parse_args([
+            "eval", "--upstream", str(self.upstream), "--python", sys.executable,
+            "--checkpoint", str(self.checkpoint), "--embodichain-root", str(chain), "--display", ":99",
+        ])
+        cmd, _, env = self.build(args)
+        self.assertEqual(cmd[2:4], ["click_bell", "random"])
+        self.assertEqual(cmd[cmd.index("--seed") + 1], "0")
+        self.assertEqual(cmd[cmd.index("--max_episodes") + 1], "10")
+        self.assertEqual(cmd[cmd.index("--max_steps") + 1], "361")
+        self.assertEqual(env["DISPLAY"], ":99")
+        self.assertTrue(env["PYTHONPATH"].startswith(str(chain.resolve() / "embodichain_tasks")))
 
     def test_non_object_json(self):
         (self.checkpoint / "config.json").write_text("[]")

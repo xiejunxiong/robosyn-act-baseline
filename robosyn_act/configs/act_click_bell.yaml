@@ -1,0 +1,22 @@
+schema_version: 1
+task: click_bell
+dataset:
+  repo_id: RoboSynChallenge/cobotmagic_Sim_click_bell
+  state_dim: 14
+  action_dim: 14
+  fps: 25
+  image_shape: [3, 480, 640]  # Policy tensors: CHW; stored videos: HWC.
+training:
+  steps: 80000
+  batch_size: 24
+  num_workers: 4
+  chunk_size: 50
+  n_action_steps: 50
+  log_freq: 100
+  save_freq: 10000
+  seed: 1000  # Pinned upstream default; historical seed not independently verified.
+evaluation:
+  setting: random
+  episodes: 10
+  seed: 0
+  max_steps: 361

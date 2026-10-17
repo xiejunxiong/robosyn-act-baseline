@@ -3,6 +3,10 @@
 data/
 outputs/
 checkpoints/
+runs/
+.venv-tools/
+*.mp4
+*.parquet
 eval_result/
 wandb/
 *.safetensors

@@ -14,3 +14,6 @@ jobs:
       - run: python -m pip install -e .
       - run: python -m unittest discover -s tests -v
       - run: robosyn-act tasks
+      - run: robosyn-act config
+      - run: robosyn-act smoke
+      - run: bash -n scripts/setup_env.sh scripts/train.sh scripts/eval.sh scripts/smoke_test.sh
