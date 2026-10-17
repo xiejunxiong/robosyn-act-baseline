@@ -1,4 +1,16 @@
 # Byte-compiled / optimized / DLL files
+# Local experiment artifacts
+data/
+outputs/
+checkpoints/
+eval_result/
+wandb/
+*.safetensors
+*.pt
+*.pth
+.env
+.env.*
+
 __pycache__/
 *.py[codz]
 *$py.class

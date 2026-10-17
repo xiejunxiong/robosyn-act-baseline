@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "robosyn-act-baseline"
+version = "0.1.0"
+description = "Reproducible launch and validation tools for the official RoboSynChallenge ACT baseline"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = []
+
+[project.scripts]
+robosyn-act = "robosyn_act.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["robosyn_act*"]
